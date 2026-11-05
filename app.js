@@ -1,8 +1,8 @@
 var GW_CSS = ":root{--bg:#1A1A1A;--bar:#141414;--card:#26292C;--field:#222528;--line:#3A3D40;--strong:#4A4E53;--accent:#BAD532;--on-accent:#141414;--title:#FFFFFF;--text:#C9CDD1;--muted:#A5ABB1;--ok:#BAD532;--warn:#F2B84B;--err:#FF7A6B}\nhtml,body{margin:0;padding:0;background:var(--bg)!important;color:var(--text);font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:14px}\n#gw{background:var(--bg);min-height:100vh;box-sizing:border-box}\n#gw *{box-sizing:border-box}\n.gw-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bar);padding:12px 16px;border-bottom:1px solid var(--line)}\n.gw-bar img{height:18px;display:block}\n.gw-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;background:var(--accent);color:var(--on-accent);padding:3px 8px;border-radius:4px;white-space:nowrap}\n.gw-main{padding:16px;display:grid;gap:14px;max-width:880px}\n.gw-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 4px}\n.gw-h1{font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;font-size:22px;color:var(--title);margin:0}\n.gw-dash{width:44px;height:4px;background:var(--accent);border-radius:2px;margin:8px 0 0}\n.gw-card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}\n.gw-card h2{font-family:'Space Grotesk',Arial,sans-serif;font-size:15px;font-weight:600;color:var(--title);margin:0 0 10px}\n.gw-row{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13px}\n.gw-row dt{color:var(--muted)}\n.gw-row dd{margin:0;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;word-break:break-all}\n.gw-field{display:grid;gap:6px;margin-bottom:10px}\n.gw-field label{font-size:12px;color:var(--muted)}\n.gw-field input{background:var(--field);border:1px solid var(--line);border-radius:6px;color:var(--title);padding:9px 10px;font:inherit}\n.gw-field input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}\n.gw-actions{display:flex;gap:10px;flex-wrap:wrap}\n.gw-btn{font:inherit;font-weight:700;border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--strong);background:transparent;color:var(--title)}\n.gw-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}\n.gw-btn:disabled{opacity:.45;cursor:not-allowed}\n.gw-log{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.55;max-height:300px;overflow:auto;white-space:pre-wrap;margin:0}\n.gw-log .ok{color:var(--ok)}.gw-log .warn{color:var(--warn)}.gw-log .err{color:var(--err)}.gw-log .mut{color:var(--muted)}\n.gw-note{font-size:12px;color:var(--muted);margin:8px 0 0}\n.gw-foot{border-top:1px solid var(--line);padding:10px 16px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}\n.gw-link{color:var(--accent)}\n@media (max-width:520px){.gw-row{grid-template-columns:1fr}}\n";
-/* Gerador de Wiki 3DX — v0.3 (teste mínimo)
+/* Gerador de Wiki 3DX — v0.4 (teste mínimo)
    Usa a sessão do usuário logado na 3DEXPERIENCE (WAFData). Não guarda senha nem dados de cliente. */
 var GW = {
-  VERSAO: 'v0.3 (05/11/2026)',
+  VERSAO: 'v0.4 (05/11/2026)',
   LOGO: 'https://hcost4.github.io/Wiki3DX/logo.png',
   WAF: null, swymUrl: null, tk: null, user: null, ocupado: false,
 
@@ -154,12 +154,12 @@ var GW = {
       })
       .then(function () {
         GW.log('3/4 · Renomeando a raiz para "Capa"…', 'mut');
-        return GW.post('/api/WikiTree/update', { id: raiz, community_id: cid, title: 'Capa', message: '<p><strong>Capa</strong> criada pelo Gerador de Wiki.</p>' });
+        return GW.post('/api/WikiTree/update', { id: raiz, community_id: cid, title: 'Capa', published: 1, message: '<p><strong>Capa</strong> criada pelo Gerador de Wiki.</p>' });
       })
       .then(function () { GW.log('Capa atualizada.', 'ok'); return GW.esperar(1500); })
       .then(function () {
         GW.log('4/4 · Criando a página "01 – Workshop"…', 'mut');
-        return GW.post('/api/WikiTree/addChild', { community_id: cid, parent_id: raiz, title: '01 – Workshop', message: '<p>Página de teste com <strong>negrito</strong>:</p><ul><li>item 1</li><li>item 2</li></ul>' });
+        return GW.post('/api/WikiTree/addChild', { community_id: cid, parent_id: raiz, title: '01 – Workshop', published: 1, message: '<p>Página de teste com <strong>negrito</strong>:</p><ul><li>item 1</li><li>item 2</li></ul>' });
       })
       .then(function (r) { GW.log('Página criada · id ' + (GW.idDe(r) || '?'), 'ok'); GW.log('Concluído. Abra a comunidade no 3DSwym e confira.', 'ok'); })
       .catch(function (e) { GW.log('Erro: ' + e.message, 'err'); })
