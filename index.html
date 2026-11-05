@@ -10,12 +10,20 @@
 <meta name="strictMode" content="false" />
 <style>html,body{margin:0;background:#1A1A1A;color:#C9CDD1;font-family:Arial,sans-serif}</style>
 <script type="text/javascript">
-/* Casca fixa: carrega sempre a versão mais recente do app.js (não precisa trocar o link no Run your App). */
+/* Casca fixa: espera o widget ficar pronto e carrega sempre a versão mais recente do app.js. */
 (function () {
-  var s = document.createElement('script');
-  s.src = 'https://hcost4.github.io/Wiki3DX/app.js?t=' + Date.now();
-  s.onerror = function () { document.body.innerHTML = '<p style="padding:16px">Não foi possível carregar o app.js.</p>'; };
-  document.head.appendChild(s);
+  var carregado = false;
+  function carregar() {
+    if (carregado) return; carregado = true;
+    var s = document.createElement('script');
+    s.src = 'https://hcost4.github.io/Wiki3DX/app.js?t=' + Date.now();
+    s.onload = function () { setTimeout(function () { if (window.GW && !document.getElementById('gw')) GW.iniciar(); }, 800); };
+    s.onerror = function () { var b = (window.widget && widget.body) ? widget.body : document.body; b.innerHTML = '<p style="padding:16px">Não foi possível carregar o app.js.</p>'; };
+    document.getElementsByTagName('head')[0].appendChild(s);
+  }
+  if (window.widget && widget.addEvent) { widget.addEvent('onLoad', carregar); }
+  else if (document.readyState !== 'loading') { carregar(); }
+  else { document.addEventListener('DOMContentLoaded', carregar); }
 })();
 </script>
 </head>
