@@ -1,10 +1,10 @@
 var GW_CSS = ":root{--bg:#1A1A1A;--bar:#141414;--card:#26292C;--field:#222528;--line:#3A3D40;--strong:#4A4E53;--accent:#BAD532;--on-accent:#141414;--title:#FFFFFF;--text:#C9CDD1;--muted:#A5ABB1;--ok:#BAD532;--warn:#F2B84B;--err:#FF7A6B}\nhtml,body{margin:0;padding:0;background:var(--bg)!important;color:var(--text);font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:14px}\n#gw{background:var(--bg);min-height:100vh;box-sizing:border-box}\n#gw *{box-sizing:border-box}\n.gw-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bar);padding:12px 16px;border-bottom:1px solid var(--line)}\n.gw-bar img{height:18px;display:block}\n.gw-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;background:var(--accent);color:var(--on-accent);padding:3px 8px;border-radius:4px;white-space:nowrap}\n.gw-main{padding:16px;display:grid;gap:14px;max-width:880px}\n.gw-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 4px}\n.gw-h1{font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;font-size:22px;color:var(--title);margin:0}\n.gw-dash{width:44px;height:4px;background:var(--accent);border-radius:2px;margin:8px 0 0}\n.gw-card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}\n.gw-card h2{font-family:'Space Grotesk',Arial,sans-serif;font-size:15px;font-weight:600;color:var(--title);margin:0 0 10px}\n.gw-row{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13px}\n.gw-row dt{color:var(--muted)}\n.gw-row dd{margin:0;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;word-break:break-all}\n.gw-field{display:grid;gap:6px;margin-bottom:10px}\n.gw-field label{font-size:12px;color:var(--muted)}\n.gw-field input{background:var(--field);border:1px solid var(--line);border-radius:6px;color:var(--title);padding:9px 10px;font:inherit}\n.gw-field input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}\n.gw-actions{display:flex;gap:10px;flex-wrap:wrap}\n.gw-btn{font:inherit;font-weight:700;border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--strong);background:transparent;color:var(--title)}\n.gw-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}\n.gw-btn:disabled{opacity:.45;cursor:not-allowed}\n.gw-log{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.55;max-height:300px;overflow:auto;white-space:pre-wrap;margin:0}\n.gw-log .ok{color:var(--ok)}.gw-log .warn{color:var(--warn)}.gw-log .err{color:var(--err)}.gw-log .mut{color:var(--muted)}\n.gw-note{font-size:12px;color:var(--muted);margin:8px 0 0}\n.gw-foot{border-top:1px solid var(--line);padding:10px 16px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}\n.gw-link{color:var(--accent)}\n@media (max-width:520px){.gw-row{grid-template-columns:1fr}}\n";
-/* Gerador de Wiki 3DX — v0.2 (teste mínimo)
+/* Gerador de Wiki 3DX — v0.3 (teste mínimo)
    Usa a sessão do usuário logado na 3DEXPERIENCE (WAFData). Não guarda senha nem dados de cliente. */
 var GW = {
-  VERSAO: 'v0.2 (05/11/2026)',
+  VERSAO: 'v0.3 (05/11/2026)',
   LOGO: 'https://hcost4.github.io/Wiki3DX/logo.png',
-  WAF: null, swymUrl: null, user: null, ocupado: false,
+  WAF: null, swymUrl: null, tk: null, user: null, ocupado: false,
 
   el: function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; },
   log: function (msg, tipo) {
@@ -59,17 +59,27 @@ var GW = {
         method: metodo, type: 'json', headers: h, timeout: 60000,
         data: dados ? JSON.stringify(dados) : undefined,
         onComplete: function (r) { if (typeof r === 'string') { try { r = JSON.parse(r); } catch (e) {} } ok(r); },
-        onFailure: function (err, resp) { falha(new Error((err && err.message ? err.message : String(err)) + (resp ? ' · ' + JSON.stringify(resp).slice(0, 300) : ''))); },
+        onFailure: function (err, resp) { var m = (err && err.message ? err.message : String(err)).replace(/\?[^"\s]*/g, ''); falha(new Error(m + (resp ? ' · ' + JSON.stringify(resp).slice(0, 300) : ''))); },
         onTimeout: function () { falha(new Error('tempo esgotado')); }
       });
     });
   },
-  csrf: function () { return GW.req('GET', '/api/index/tk').then(function (r) { return r.result.ServerToken; }); },
-  post: function (caminho, params) {
-    return GW.csrf().then(function (tk) { return GW.req('POST', caminho, { params: params }, tk); });
+  /* Token CSRF da sessão: pega uma vez e renova só se a plataforma recusar */
+  csrf: function (renovar) {
+    if (GW.tk && !renovar) return Promise.resolve(GW.tk);
+    return GW.req('GET', '/api/index/tk').then(function (r) { GW.tk = r.result.ServerToken; return GW.tk; });
   },
+  comToken: function (fn) {
+    return GW.csrf().then(fn).catch(function (e) {
+      if (!/CSRF/.test(e.message)) throw e;
+      GW.log('Token recusado, renovando…', 'warn');
+      return GW.csrf(true).then(fn);
+    });
+  },
+  get: function (caminho) { return GW.comToken(function (tk) { return GW.req('GET', caminho, null, tk); }); },
+  post: function (caminho, params) { return GW.comToken(function (tk) { return GW.req('POST', caminho, { params: params }, tk); }); },
 
-  /* Descobre o endereço do 3DSwym: 1) serviços da plataforma, 2) Compass, 3) endereço do dashboard */
+  /* Descobre o endereço do 3DSwym: 1) endereço do dashboard, 2) serviços da plataforma, 3) Compass */
   acharSwym: function (Compass, Plat) {
     function comPrazo(p, ms) { return Promise.race([p, new Promise(function (_, f) { setTimeout(function () { f(new Error('sem resposta em ' + ms / 1000 + 's')); }, ms); })]); }
     var t1 = function () {
@@ -97,8 +107,8 @@ var GW = {
       var ref = document.referrer || ''; var m = ref.match(/^https:\/\/([^\/]+)-ifwe\.([^\/]+)/);
       return m ? Promise.resolve('https://' + m[1] + '-3dswym.' + m[2]) : Promise.reject(new Error('endereço do dashboard não disponível'));
     };
-    return t1().catch(function (e) { GW.log('Busca 1 (serviços da plataforma): ' + e.message, 'warn'); return t2(); })
-      .catch(function (e) { GW.log('Busca 2 (Compass): ' + e.message, 'warn'); return t3(); });
+    return t3().catch(function (e) { GW.log('Busca 1 (endereço do dashboard): ' + e.message, 'warn'); return t1(); })
+      .catch(function (e) { GW.log('Busca 2 (serviços da plataforma): ' + e.message, 'warn'); return t2(); });
   },
 
   conectar: function () {
@@ -111,7 +121,7 @@ var GW = {
       var seguir = function (Plat) {
         GW.acharSwym(Compass, Plat).then(function (u) {
           GW.swymUrl = String(u).replace(/\/$/, ''); GW.set('gw-swym', GW.swymUrl);
-          return GW.req('GET', '/api/user/getcurrent');
+          return GW.get('/api/user/getcurrent');
         }).then(function (r) {
           var u2 = (r && r.result) || r || {}; GW.user = u2;
           GW.set('gw-user', (u2.first_name || '') + ' ' + (u2.last_name || '') + ' · ' + (u2.login || ''));
