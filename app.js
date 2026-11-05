@@ -1,13 +1,14 @@
 // Gerador de Wiki 3DX — SKA + GoEngineer
 // Usa a sessão do usuário logado na 3DEXPERIENCE (WAFData). Não guarda senha nem dados de cliente.
-var GW_VERSAO = 'v0.6 (05/11/2026)';
+var GW_VERSAO = 'v0.6.1 (05/11/2026)';
 var GW_BASE = 'https://hcost4.github.io/Wiki3DX/';
 
 var GW_CSS = `
 :root{--bg:#1A1A1A;--surface:#26292C;--surface-2:#222528;--surface-3:#2F3337;--line:#3A3D40;--line-strong:#4A4E53;--fg:#E4E6E8;--muted:#A5ABB1;--accent:#BAD532;--accent-soft:#33381F;--accent-ink:#141414;--bar:#141414;--ok:#BAD532;--ok-soft:#33381F;--warn:#F0B86A;--warn-soft:#3A2C17;--err:#FF7A6B;--font-display:'Space Grotesk','Segoe UI',Arial,sans-serif;--font-ui:'Plus Jakarta Sans','Segoe UI',Arial,sans-serif;--font-mono:'IBM Plex Mono',Consolas,monospace;--r:8px;--r-s:6px;color-scheme:dark}
-html,body{margin:0;padding:0;background:var(--bg)!important}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg)!important}
 #gw,#gw *{box-sizing:border-box}
-#gw{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.5;min-height:100vh}
+#gw{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.5;height:100vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+#gw::-webkit-scrollbar{width:10px}#gw::-webkit-scrollbar-thumb{background:#4A4E53;border-radius:6px}#gw::-webkit-scrollbar-track{background:#1A1A1A}
 #gw .topbar{background:var(--bar);border-bottom:1px solid var(--line)}
 #gw .topbar .in{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 #gw .brand{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
